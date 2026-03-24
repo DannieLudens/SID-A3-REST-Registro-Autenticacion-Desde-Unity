@@ -60,7 +60,34 @@ public class UIManager : MonoBehaviour
         // Buscar el APIManager en la escena
         apiManager = FindFirstObjectByType<APIManager>();
 
-        // Mostrar solo el panel de login al inicio
+        // Suscribirse al evento de token expirado
+        // Si en cualquier momento el servidor dice que el token ya no sirve,
+        // automáticamente volvemos al login
+        apiManager.OnTokenExpired += HandleTokenExpired;
+
+        // Intentar cargar un token guardado previamente
+        apiManager.LoadToken();
+
+        // Si ya hay un token guardado, ir directo al panel de juego
+        if (apiManager.IsAuthenticated)
+        {
+            textBienvenida.text = "Bienvenido, " + apiManager.CurrentUsername;
+            MostrarPanel("juego");
+            OnClickRefrescarTabla();
+        }
+        else
+        {
+            // Si no hay token, mostrar el login
+            MostrarPanel("login");
+        }
+    }
+
+    // Se ejecuta cuando el token expira
+    void HandleTokenExpired()
+    {
+        textMensajeLogin.text = "Tu sesión expiró. Por favor inicia sesión de nuevo.";
+        inputUsuarioLogin.text = "";
+        inputPasswordLogin.text = "";
         MostrarPanel("login");
     }
 

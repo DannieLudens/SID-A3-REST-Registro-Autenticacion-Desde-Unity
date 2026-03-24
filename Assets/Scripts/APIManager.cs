@@ -31,6 +31,52 @@ public class APIManager : MonoBehaviour
     public bool IsAuthenticated => !string.IsNullOrEmpty(token);
 
     // ====================================================
+    // PERSISTENCIA DEL TOKEN (PlayerPrefs)
+    // ====================================================
+    // PlayerPrefs guarda datos en el navegador (localStorage en WebGL).
+    // Así el token sobrevive cuando se recarga la página.
+
+    private void SaveToken()
+    {
+        PlayerPrefs.SetString("auth_token", token);
+        PlayerPrefs.SetString("auth_username", currentUsername);
+        PlayerPrefs.Save();
+    }
+
+    public void LoadToken()
+    {
+        token = PlayerPrefs.GetString("auth_token", "");
+        currentUsername = PlayerPrefs.GetString("auth_username", "");
+    }
+
+    private void ClearToken()
+    {
+        PlayerPrefs.DeleteKey("auth_token");
+        PlayerPrefs.DeleteKey("auth_username");
+        PlayerPrefs.Save();
+    }
+
+    // ====================================================
+    // EVENTO DE TOKEN EXPIRADO
+    // ====================================================
+    // Cuando el servidor responde 401, significa que el token
+    // ya no es válido. Este evento avisa al UIManager para
+    // que mande al usuario de vuelta al login.
+    public event Action OnTokenExpired;
+
+    private bool CheckTokenExpired(UnityWebRequest request)
+    {
+        if (request.responseCode == 401)
+        {
+            Debug.LogWarning("Token expirado o inválido. Redirigiendo al login...");
+            Logout();
+            OnTokenExpired?.Invoke();
+            return true;
+        }
+        return false;
+    }
+
+    // ====================================================
     // CLASES PARA CONVERTIR JSON ↔ OBJETOS C#
     // ====================================================
     // Cuando en Postman veías la respuesta JSON, Unity necesita
@@ -163,6 +209,9 @@ public class APIManager : MonoBehaviour
                 token = response.token;
                 currentUsername = username;
 
+                // Guardar el token para que persista al recargar
+                SaveToken();
+
                 callback(true, "Login exitoso.");
             }
             else
@@ -203,6 +252,9 @@ public class APIManager : MonoBehaviour
 
             yield return request.SendWebRequest();
 
+            // Verificar si el token expiró
+            if (CheckTokenExpired(request)) yield break;
+
             if (request.result == UnityWebRequest.Result.Success)
             {
                 callback(true, "Score actualizado correctamente.");
@@ -233,6 +285,9 @@ public class APIManager : MonoBehaviour
 
             Debug.Log("Status HTTP: " + request.responseCode);
             Debug.Log("Resultado: " + request.result);
+
+            // Verificar si el token expiró
+            if (CheckTokenExpired(request)) yield break;
 
             if (request.result == UnityWebRequest.Result.Success)
             {
@@ -282,5 +337,6 @@ public class APIManager : MonoBehaviour
     {
         token = "";
         currentUsername = "";
+        ClearToken();
     }
 }
