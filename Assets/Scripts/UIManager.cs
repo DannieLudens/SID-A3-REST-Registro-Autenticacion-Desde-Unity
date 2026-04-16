@@ -95,11 +95,18 @@ public class UIManager : MonoBehaviour
     // NAVEGACIÓN ENTRE PANELES
     // ====================================================
     // Activar un panel y desactivar los demás
-    void MostrarPanel(string panel)
+    public void MostrarPanel(string panel)
     {
         panelLogin.SetActive(panel == "login");
         panelRegistro.SetActive(panel == "registro");
         panelJuego.SetActive(panel == "juego");
+    }
+
+    // Método público para que SnakeGame pueda volver al menú
+    public void MostrarPanelJuego()
+    {
+        MostrarPanel("juego");
+        OnClickRefrescarTabla();
     }
 
     // Botón "Ir a Registro"

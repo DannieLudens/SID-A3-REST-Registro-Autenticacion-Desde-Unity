@@ -10,7 +10,7 @@ public class APIManager : MonoBehaviour
     // URL BASE DE LA API
     // ====================================================
     // Esta es la dirección del servidor, igual que en Postman
-    private const string BASE_URL = "https://sid-restapi.onrender.com";
+ private const string BASE_URL = "http://127.0.0.1:1234";
 
     // ====================================================
     // VARIABLE PARA GUARDAR EL TOKEN
@@ -35,7 +35,10 @@ public class APIManager : MonoBehaviour
     // ====================================================
     // PlayerPrefs guarda datos en el navegador (localStorage en WebGL).
     // Así el token sobrevive cuando se recarga la página.
-
+    void Awake()
+{
+    DontDestroyOnLoad(this.gameObject);
+}
     private void SaveToken()
     {
         PlayerPrefs.SetString("auth_token", token);
@@ -339,4 +342,11 @@ public class APIManager : MonoBehaviour
         currentUsername = "";
         ClearToken();
     }
+
+    public void OnClickJugar()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("SnakeScene");
+    }
+
 }
+
